@@ -26,9 +26,10 @@ import org.nd4j.linalg.lossfunctions.LossFunctions
 import java.io.StringReader
 import java.util.*
 
+/**
+ * Simple sample using vertex for merging multiple input
+ */
 object IrisMergeVertexSample {
-
-
 
     @Throws(Exception::class)
     @JvmStatic

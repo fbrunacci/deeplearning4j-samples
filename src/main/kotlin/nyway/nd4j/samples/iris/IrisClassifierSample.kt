@@ -28,8 +28,6 @@ import java.util.*
 
 object IrisClassifierSample {
 
-
-
     @Throws(Exception::class)
     @JvmStatic
     fun main(args: Array<String>) {
