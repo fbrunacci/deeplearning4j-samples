@@ -13,3 +13,4 @@ build
 
 *.zip
 *-checkpoint.ipynb
+.attach_pid*
