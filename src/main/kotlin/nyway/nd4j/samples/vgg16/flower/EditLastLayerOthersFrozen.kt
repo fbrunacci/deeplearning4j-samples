@@ -87,7 +87,7 @@ object EditLastLayerOthersFrozen {
                 .build()
         println(vgg16Transfer.summary())
 
-        if(true) return
+//        if(true) return
 
         //Dataset iterators
         setup(batchSize, trainPerc)

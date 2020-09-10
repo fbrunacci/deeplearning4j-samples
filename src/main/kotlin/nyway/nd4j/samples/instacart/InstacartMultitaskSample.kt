@@ -23,13 +23,15 @@ import org.nd4j.linalg.lossfunctions.LossFunctions
 import java.io.*
 import java.net.URL
 
-
+/**
+ * https://www.kaggle.com/c/instacart-market-basket-analysis
+ */
 object InstacartMultitaskSample {
 
     @Throws(Exception::class)
     @JvmStatic
     fun main(args: Array<String>) {
-        val DATA_URL = "https://dl4jdata.blob.core.windows.net/training/tutorials/instacart.tar.gz"
+        val DATA_URL = this::class.java.classLoader.getResource("instacart.tar.gz")
         val DATA_PATH = FilenameUtils.concat(System.getProperty("java.io.tmpdir"), "dl4j_instacart/")
 
         val directory = File(DATA_PATH)
@@ -40,7 +42,7 @@ object InstacartMultitaskSample {
         val extractedPath = DATA_PATH + "instacart"
         val extractedFile = File(extractedPath)
 
-        FileUtils.copyURLToFile(URL(DATA_URL), archiveFile)
+        FileUtils.copyURLToFile(DATA_URL, archiveFile)
 
         var fileCount = 0
         var dirCount = 0
@@ -74,7 +76,6 @@ object InstacartMultitaskSample {
             }
             entry = tais.getNextEntry()
         }
-
         val path = FilenameUtils.concat(DATA_PATH, "instacart/") // set parent directory
 
         val featureBaseDir = FilenameUtils.concat(path, "features") // set feature directory
