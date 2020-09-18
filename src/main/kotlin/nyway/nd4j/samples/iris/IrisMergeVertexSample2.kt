@@ -14,6 +14,8 @@ import org.nd4j.linalg.activations.Activation
 import org.nd4j.linalg.api.ndarray.INDArray
 import org.nd4j.linalg.dataset.DataSet
 import org.nd4j.linalg.dataset.MultiDataSet
+import org.nd4j.linalg.dataset.adapter.SingletonMultiDataSetIterator
+import org.nd4j.linalg.dataset.api.iterator.MultiDataSetIterator
 import org.nd4j.linalg.dataset.api.preprocessor.DataNormalization
 import org.nd4j.linalg.dataset.api.preprocessor.NormalizerStandardize
 import org.nd4j.linalg.factory.Nd4j
@@ -104,10 +106,8 @@ object IrisMergeVertexSample2 {
         mergedModel.init()
         println(mergedModel.summary())
 
-
         val fullDataSet = DataSet(dataPetalAndSepalIn, dataOut)
         fullDataSet.shuffle(IrisClassifier.seed)
-
         val splitedSet = fullDataSet.splitTestAndTrain(0.90)
         val trainingData = splitedSet.train;
         val testData = splitedSet.test;
@@ -122,6 +122,7 @@ object IrisMergeVertexSample2 {
         val trainingSepalDataSet = trainingData.features.get(NDArrayIndex.all(), NDArrayIndex.interval(2, 4))
 
         val trainingDataSet = MultiDataSet(arrayOf(trainingPetalDataSet, trainingSepalDataSet), arrayOf(trainingData.labels))
+        // val trainingDataSetIt = SingletonMultiDataSetIterator(trainingDataSet)
 
         // train the network
         mergedModel.setListeners(ScoreIterationListener(100))

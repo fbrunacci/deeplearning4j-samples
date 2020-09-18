@@ -145,10 +145,10 @@ object IrisMergeVertexSample {
         val model = MultiLayerNetwork(conf)
 
         //Create a data set from the INDArrays and shuffle it
-        val fullDataSet = DataSet(dataIn, Nd4j.create(IrisClassifier.twodimLabel))
-        fullDataSet.shuffle(IrisClassifier.seed)
+        val dataSet = DataSet(dataIn, Nd4j.create(IrisClassifier.twodimLabel))
+        dataSet.shuffle(IrisClassifier.seed)
 
-        val splitedSet = fullDataSet.splitTestAndTrain(0.90)
+        val splitedSet = dataSet.splitTestAndTrain(0.90)
         val trainingData = splitedSet.train;
         val testData = splitedSet.test;
 
@@ -161,7 +161,7 @@ object IrisMergeVertexSample {
         normalizer.transform(trainingData) //Apply normalization to the training data
         normalizer.transform(testData) //Apply normalization to the test data. This is using statistics calculated from the *training* set
 
-        fullDataSet.features
+        dataSet.features
 
         // train the network
         model.setListeners(ScoreIterationListener(100))
