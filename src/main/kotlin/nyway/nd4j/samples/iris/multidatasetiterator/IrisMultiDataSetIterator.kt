@@ -30,12 +30,14 @@ class IrisMultiDataSetIterator(private val dataFrame: DataFrame, val batchSize: 
 
         val multiDataSets: ArrayList<MultiDataSet> = ArrayList()
         for(i in 0..num-1) {
-            val nextRow = dataFrameIterator.next()
-            multiDataSets.add(MultiDataSet(
-                    arrayOf(rowToFeatures("sepal-length","sepal-width",nextRow),
-                            rowToFeatures("petal-length","petal-width",nextRow)),
-                    arrayOf(rowToLabels(nextRow))
-                    , featuresMask, labelMask))
+            if( dataFrameIterator.hasNext() ) {
+                val nextRow = dataFrameIterator.next()
+                multiDataSets.add(MultiDataSet(
+                        arrayOf(rowToFeatures("sepal-length","sepal-width",nextRow),
+                                rowToFeatures("petal-length","petal-width",nextRow)),
+                        arrayOf(rowToLabels(nextRow))
+                        , featuresMask, labelMask))
+            }
         }
         return MultiDataSet.merge(multiDataSets)
     }
