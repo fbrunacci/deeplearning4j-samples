@@ -1,5 +1,6 @@
 package nyway.nd4j.samples.vgg16.flower
 
+import nyway.nd4j.samples.Samples
 import org.apache.commons.io.FileUtils
 import org.datavec.api.io.filters.BalancedPathFilter
 import org.datavec.api.io.labels.ParentPathLabelGenerator
@@ -24,7 +25,8 @@ import java.util.*
  * @author susaneraly on 3/9/17.
  */
 object FlowerDataSetIterator {
-    private val DATA_DIR = File(System.getProperty("user.home")).toString() + "/dl4j-examples-data/dl4j-examples"
+
+    private val DATA_DIR = Samples.dataFolder
     private const val DATA_URL = "http://download.tensorflow.org/example_images/flower_photos.tgz"
     private val FLOWER_DIR = "$DATA_DIR/flower_photos"
     private val allowedExtensions = BaseImageLoader.ALLOWED_FORMATS

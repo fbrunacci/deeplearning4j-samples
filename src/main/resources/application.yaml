@@ -1,0 +1,6 @@
+work_folder: ${user.home}/.deeplearning4j
+
+folder:
+  data: ${work_folder}/data
+  model: ${work_folder}/models
+

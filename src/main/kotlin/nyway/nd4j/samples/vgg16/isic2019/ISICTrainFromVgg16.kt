@@ -13,52 +13,50 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  ******************************************************************************/
-package nyway.nd4j.samples.vgg16.flower
+package nyway.nd4j.samples.vgg16.isic2019
 
+import krangl.writeCSV
 import nyway.nd4j.samples.Samples
+import nyway.nd4j.samples.listeners.PrintScoreIterationListener
+import org.deeplearning4j.core.storage.StatsStorage
 import org.deeplearning4j.nn.conf.distribution.NormalDistribution
 import org.deeplearning4j.nn.conf.layers.OutputLayer
 import org.deeplearning4j.nn.graph.ComputationGraph
 import org.deeplearning4j.nn.transferlearning.FineTuneConfiguration
 import org.deeplearning4j.nn.transferlearning.TransferLearning
+import org.deeplearning4j.optimize.listeners.ScoreIterationListener
+import org.deeplearning4j.ui.api.UIServer
+import org.deeplearning4j.ui.model.stats.StatsListener
+import org.deeplearning4j.ui.model.storage.InMemoryStatsStorage
 import org.deeplearning4j.zoo.ZooModel
 import org.deeplearning4j.zoo.model.VGG16
 import org.nd4j.evaluation.classification.Evaluation
 import org.nd4j.linalg.activations.Activation
-import org.nd4j.linalg.learning.config.Nesterovs
+import org.nd4j.linalg.learning.config.Adam
 import org.nd4j.linalg.lossfunctions.LossFunctions
-import nyway.nd4j.samples.vgg16.flower.FlowerDataSetIterator.setup
-import nyway.nd4j.samples.vgg16.flower.FlowerDataSetIterator.testIterator
-import nyway.nd4j.samples.vgg16.flower.FlowerDataSetIterator.trainIterator
 import java.io.File
 import java.io.IOException
+import java.util.*
 
-/**
- * @author susaneraly on 3/9/17.
- *
- * We use the transfer learning API to construct a new model based of org.deeplearning4j.transferlearning.vgg16
- * We will hold all layers but the very last one frozen and change the number of outputs in the last layer to
- * match our classification task.
- * In other words we go from where fc2 and predictions are vertex names in org.deeplearning4j.transferlearning.vgg16
- * fc2 -> predictions (1000 classes)
- * to
- * fc2 -> predictions (5 classes)
- * The class "FitFromFeaturized" attempts to train this same architecture the difference being the outputs from the last
- * frozen layer is presaved and the fit is carried out on this featurized dataset.
- * When running multiple epochs this can save on computation time.
- */
-object EditLastLayerOthersFrozen {
+
+object ISICTrainFromVgg16 {
 //    private val log = LoggerFactory.getLogger(EditLastLayerOthersFrozen::class.java)
-    internal const val numClasses = 5
+    internal const val numClasses = 9
     internal const val seed: Long = 12345
-    const val trainPerc = 80
-    private const val batchSize = 15
+    private const val batchSize = 1
     private const val featureExtractionLayer = "fc2"
 
     @Throws(IOException::class)
     @JvmStatic
     fun main(args: Array<String>) {
+        val isicFolder = "${Samples.dataFolder}/ISIC_2019"
 
+        val isicDataSet = ISICDataSet(
+                "$isicFolder/ISIC_2019_Training_Input",
+                "$isicFolder/ISIC_2019_Training_GroundTruth.csv",
+                trainSize = 0.9f)
+
+        val rng = Random(123)
         //Import vgg
         //Note that the model imported does not have an output layer (check printed summary)
         //  nor any training related configs (model from keras was imported with only weights and json)
@@ -66,11 +64,24 @@ object EditLastLayerOthersFrozen {
         val vgg16 = zooModel.initPretrained() as ComputationGraph
         println(vgg16.summary())
 
+
+        // reduce the learning rate as the number of training epochs increases
+        // iteration #, learning rate
+        val learningRateSchedule: MutableMap<Int, Double> = HashMap()
+        learningRateSchedule[0] = 5e-5
+        learningRateSchedule[1000] = 5e-6
+        learningRateSchedule[2000] = 5e-7
+        learningRateSchedule[3000] = 5e-8
+
         //Decide on a fine tune configuration to use.
         //In cases where there already exists a setting the fine tune setting will
         //  override the setting for all layers that are not "frozen".
         val fineTuneConf = FineTuneConfiguration.Builder()
-                .updater(Nesterovs(5e-5))
+//                .updater(Nesterovs(5e-5))
+                .updater(Adam(0.0001))
+//                .updater(Nadam(5e-5))
+//                .updater(Nesterovs( MapSchedule(ScheduleType.ITERATION, learningRateSchedule)))
+//                .updater(Nadam( MapSchedule(ScheduleType.ITERATION, learningRateSchedule)))
                 .seed(seed)
                 .build()
 
@@ -80,7 +91,7 @@ object EditLastLayerOthersFrozen {
                 .setFeatureExtractor(featureExtractionLayer) //the specified layer and below are "frozen"
                 .removeVertexKeepConnections("predictions") //replace the functionality of the final vertex
                 .addLayer("predictions",
-                        OutputLayer.Builder(LossFunctions.LossFunction.NEGATIVELOGLIKELIHOOD)
+                        OutputLayer.Builder(LossFunctions.LossFunction.KL_DIVERGENCE)
                                 .nIn(4096).nOut(numClasses)
                                 .weightInit(NormalDistribution(0.0, 0.2 * (2.0 / (4096 + numClasses)))) //This weight init dist gave better results than Xavier
                                 .activation(Activation.SOFTMAX).build(),
@@ -88,32 +99,39 @@ object EditLastLayerOthersFrozen {
                 .build()
         println(vgg16Transfer.summary())
 
-//        if(true) return
+        val uiServer = UIServer.getInstance()
+        val statsStorage: StatsStorage = InMemoryStatsStorage()
+        uiServer.attach(statsStorage)
 
-        //Dataset iterators
-        setup(batchSize, trainPerc)
-        val trainIter = trainIterator()
-        val testIter = testIterator()
-        var eval: Evaluation
-        eval = vgg16Transfer.evaluate(testIter)
-        println("Eval stats BEFORE fit.....")
-        println(eval.stats())
+        val score = PrintScoreIterationListener(1)
+        vgg16Transfer.setListeners(StatsListener(statsStorage), score)
 
+        val trainIter = isicDataSet.trainIterator()
+        val testIter = isicDataSet.testIterator()
         testIter.reset()
-        var iter = 0
-        while (trainIter.hasNext()) {
-            vgg16Transfer.fit(trainIter.next())
-            if (iter % 10 == 0) {
-                println("Evaluate model at iter $iter ....")
-                eval = vgg16Transfer.evaluate(testIter)
-                println(eval.stats())
-                testIter.reset()
-            }
-            iter++
+
+        var eval: Evaluation
+
+        println("Number of image to train: ${isicDataSet.nTrain}")
+        println("Number of image for test: ${isicDataSet.nTest}")
+
+        //Print score every 10 iterations and evaluate on test set every epoch
+        vgg16Transfer.setListeners(
+                ScoreIterationListener(100)
+                //,EvaluativeListener(testIter, 1, InvocationType.EPOCH_END)
+        )
+        for(epoch in 1..10) {
+            vgg16Transfer.fit(trainIter)
         }
-        println("Model build complete")
-        vgg16Transfer.save(File("${Samples.modelFolder}/vgg16/Vgg16OnFlower.zip"), true)
 
-
+        println("> vgg16Transfer.evaluate(testIter)")
+        testIter.reset()
+        eval = vgg16Transfer.evaluate(testIter)
+        println(eval.stats())
+        val vgg16TransferFile = File("${Samples.modelFolder}/vgg16/Vgg16OnISIC.zip")
+        println("> saving model to $vgg16TransferFile")
+        vgg16Transfer.save(vgg16TransferFile, true)
+        println("> saving test data to $vgg16TransferFile")
+        isicDataSet.testDataFrame.writeCSV(File("${Samples.modelFolder}/vgg16/Vgg16OnISIC_testDataFrame.csv"))
     }
 }

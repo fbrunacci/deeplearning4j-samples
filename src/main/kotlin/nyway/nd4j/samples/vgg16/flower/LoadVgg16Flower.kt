@@ -15,6 +15,7 @@
  ******************************************************************************/
 package nyway.nd4j.samples.vgg16.flower
 
+import nyway.nd4j.samples.Samples
 import org.deeplearning4j.nn.graph.ComputationGraph
 import org.nd4j.evaluation.classification.Evaluation
 import java.io.File
@@ -25,7 +26,7 @@ object LoadVgg16Flower {
     @Throws(IOException::class)
     @JvmStatic
     fun main(args: Array<String>) {
-        val vgg16OnFlower = ComputationGraph.load(File("Vgg16OnFlower.zip"), true)
+        val vgg16OnFlower = ComputationGraph.load(File("${Samples.modelFolder}/vgg16/Vgg16OnFlower.zip"), true)
         FlowerDataSetIterator.setup(15, EditLastLayerOthersFrozen.trainPerc)
         val testIter = FlowerDataSetIterator.testIterator()
         var eval: Evaluation
