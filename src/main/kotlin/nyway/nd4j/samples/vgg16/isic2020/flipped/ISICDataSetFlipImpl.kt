@@ -1,15 +1,16 @@
 package nyway.nd4j.samples.vgg16.isic2020.flipped
 
 import krangl.*
+import nyway.nd4j.samples.vgg16.isic2020.IDataFrameSet
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator
 import org.nd4j.linalg.dataset.api.preprocessor.VGG16ImagePreProcessor
 
-class ISICDataSet(val imageDir: String, val csvFile: String, val trainSize: Float = 0.9f) {
+class ISICDataSetFlipImpl(val imageDir: String, val csvFile: String, val trainSize: Float = 0.9f) : IDataFrameSet {
 
     private val df : DataFrame = DataFrame.readCSV(csvFile).shuffle()
 
-    val trainDataFrame : DataFrame
-    val testDataFrame : DataFrame
+    override val trainDataFrame : DataFrame
+    override val testDataFrame : DataFrame
     val nTrain: Int
     val nTest: Int
 
@@ -57,14 +58,14 @@ class ISICDataSet(val imageDir: String, val csvFile: String, val trainSize: Floa
         return arrayOf(trainDataFrameWithMalignantFlipped, testDataFrameNotFlipped)
     }
 
-    fun trainIterator(): DataSetIterator {
-        val dataSetIterator = ISICDataSetIterator(trainDataFrame, imageDir)
+    override fun trainIterator(): DataSetIterator {
+        val dataSetIterator = ISICDataSetIteratorFlipImpl(trainDataFrame, imageDir)
         dataSetIterator.preProcessor = VGG16ImagePreProcessor()
         return dataSetIterator
     }
 
-    fun testIterator(): DataSetIterator {
-        val dataSetIterator = ISICDataSetIterator(testDataFrame, imageDir)
+    override fun testIterator(): DataSetIterator {
+        val dataSetIterator = ISICDataSetIteratorFlipImpl(testDataFrame, imageDir)
         dataSetIterator.preProcessor = VGG16ImagePreProcessor()
         return dataSetIterator
     }

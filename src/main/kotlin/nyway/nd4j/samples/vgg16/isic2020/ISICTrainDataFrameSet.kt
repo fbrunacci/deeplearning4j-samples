@@ -19,7 +19,8 @@ import krangl.count
 import krangl.eq
 import krangl.writeCSV
 import nyway.nd4j.samples.Samples
-import nyway.nd4j.samples.vgg16.isic2020.flipped.ISICDataSetFlipImpl
+import nyway.nd4j.samples.vgg16.isic2020.deotte.ISICDeotteDataSet
+import nyway.nd4j.samples.vgg16.isic2020.deotte.IsicDeotteData
 import org.deeplearning4j.nn.conf.distribution.NormalDistribution
 import org.deeplearning4j.nn.conf.layers.OutputLayer
 import org.deeplearning4j.nn.graph.ComputationGraph
@@ -39,8 +40,8 @@ import java.io.IOException
 import java.util.*
 
 
-object ISICTrainFromVgg16 {
-//    private val log = LoggerFactory.getLogger(EditLastLayerOthersFrozen::class.java)
+object ISICTrainDataFrameSet {
+
     internal const val numClasses = 2
     internal const val seed: Long = 12345
     private const val batchSize = 1
@@ -49,14 +50,12 @@ object ISICTrainFromVgg16 {
     @Throws(IOException::class)
     @JvmStatic
     fun main(args: Array<String>) {
-        val isicFolder = "/run/media/fabien/TOSHIBA/IA/ISIC/2020"
 
-        val isicDataSet: IDataFrameSet = ISICDataSetFlipImpl(
-                "$isicFolder/jpeg/train/",
-                "$isicFolder/train.csv",
-                trainSize = 0.9f)
+        val TAG ="Deotte"
 
-        println(isicDataSet.trainIterator().next().labels)
+        val deotteFolder = "${Samples.dataFolder}/ISIC_2020/Deotte/"
+        val deotteIsisData = IsicDeotteData.Factory.deotteIsisData(deotteFolder)
+        val isicDataFrameSet: IDataFrameSet = ISICDeotteDataSet(deotteIsisData)
 
         val rng = Random(123)
         //Import vgg
@@ -101,25 +100,21 @@ object ISICTrainFromVgg16 {
                 .build()
         println(vgg16Transfer.summary())
 
-        val trainIter = isicDataSet.trainIterator()
-        val testIter = isicDataSet.testIterator()
+        val trainIter = isicDataFrameSet.trainIterator()
+        val testIter = isicDataFrameSet.testIterator()
         testIter.reset()
 
         var eval: Evaluation
 
-        println("Number of image to train: ${isicDataSet.trainDataFrame.rows.count()}")
-        println("Number of image for test: ${isicDataSet.testDataFrame.rows.count()}")
-        println("Train benign: ${isicDataSet.trainDataFrame.filter { it["benign_malignant"] eq "benign" }.count()}")
-        println("Train malignant: ${isicDataSet.trainDataFrame.filter { it["benign_malignant"] eq "malignant" }.count()}")
-        println("Test benign: ${isicDataSet.testDataFrame.filter { it["benign_malignant"] eq "benign" }.count()}")
-        println("Test malignant: ${isicDataSet.testDataFrame.filter { it["benign_malignant"] eq "malignant" }.count()}")
+        println("Train : ${isicDataFrameSet.trainDataFrame.groupBy("benign_malignant").count()}")
+        println("Test : ${isicDataFrameSet.testDataFrame.groupBy("benign_malignant").count()}")
 
         //Print score every 10 iterations and evaluate on test set every epoch
         vgg16Transfer.setListeners(
                 ScoreIterationListener(100)
                 , EvaluativeListener(testIter, 1, InvocationType.EPOCH_END)
         )
-        for(epoch in 1..5) {
+        for(epoch in 1..2) {
             vgg16Transfer.fit(trainIter)
         }
 
@@ -127,10 +122,10 @@ object ISICTrainFromVgg16 {
         testIter.reset()
         eval = vgg16Transfer.evaluate(testIter)
         println(eval.stats())
-        val vgg16TransferFile = File("${Samples.modelFolder}/vgg16/Vgg16OnISIC2020.zip")
+        val vgg16TransferFile = File("${Samples.modelFolder}/vgg16_on_${TAG}_model.zip")
         println("> saving model to $vgg16TransferFile")
         vgg16Transfer.save(vgg16TransferFile, true)
         println("> saving test data to $vgg16TransferFile")
-        isicDataSet.testDataFrame.writeCSV(File("${Samples.modelFolder}/vgg16/Vgg16OnISIC2020_testDataFrame.csv"))
+        isicDataFrameSet.testDataFrame.writeCSV(File("${Samples.modelFolder}/vgg16_on_${TAG}_testDataFrame.csv"))
     }
 }

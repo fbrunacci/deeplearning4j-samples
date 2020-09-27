@@ -1,17 +1,26 @@
 package nyway.nd4j.samples.vgg16.isic2020
 
 import krangl.*
-import nyway.nd4j.samples.Samples
+import nyway.nd4j.samples.vgg16.isic2020.flipped.ISICDataSetFlipImpl
 import org.datavec.image.loader.NativeImageLoader
 import org.datavec.image.transform.FlipImageTransform
 import org.nd4j.linalg.api.ndarray.INDArray
 import java.io.File
-import javax.xml.crypto.Data
 
 object Work {
 
     @JvmStatic
     fun main(args: Array<String>) {
+
+        val isicFolder = "/run/media/fabien/TOSHIBA/IA/ISIC/2020"
+
+        val isicDataFrameSet: IDataFrameSet = ISICDataSetFlipImpl(
+                "$isicFolder/jpeg/train/",
+                "$isicFolder/train.csv",
+                trainSize = 0.9f)
+        println("Number of image to train: ${isicDataFrameSet.trainDataFrame.rows.count()}")
+        println("Number of image for test: ${isicDataFrameSet.testDataFrame.rows.count()}")
+        if(true) return
 
 //        val isicFolder = "${Samples.dataFolder}/ISIC_2019"
 //
@@ -47,9 +56,6 @@ object Work {
         )
         println(dfx.select("image_name","flip"))
 
-        fun readCSVTo(fileOrUrl: String): DataFrame {
-            return null
-        }
 
     }
 

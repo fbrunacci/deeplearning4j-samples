@@ -11,7 +11,7 @@ import org.nd4j.linalg.dataset.api.DataSetPreProcessor
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator
 import org.nd4j.linalg.factory.Nd4j
 
-class ISICDataSetIterator(private val dataFrame: DataFrame, private val imageDir: String) : DataSetIterator {
+class ISICDataSetIteratorFlipImpl(private val dataFrame: DataFrame, private val imageDir: String) : DataSetIterator {
 
     private val height = 224L
     private val width = 224L

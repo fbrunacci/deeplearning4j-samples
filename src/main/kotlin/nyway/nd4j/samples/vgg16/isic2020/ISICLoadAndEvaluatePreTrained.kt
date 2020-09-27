@@ -3,7 +3,7 @@ package nyway.nd4j.samples.vgg16.isic2020
 import krangl.DataFrame
 import krangl.readCSV
 import nyway.nd4j.samples.Samples
-import nyway.nd4j.samples.vgg16.isic2020.flipped.ISICDataSetIterator
+import nyway.nd4j.samples.vgg16.isic2020.flipped.ISICDataSetIteratorFlipImpl
 import org.deeplearning4j.util.ModelSerializer
 import org.nd4j.evaluation.classification.Evaluation
 import org.nd4j.linalg.dataset.api.preprocessor.VGG16ImagePreProcessor
@@ -17,7 +17,7 @@ object ISICLoadAndEvaluatePreTrained {
         val imageDir = "$isicFolder/jpeg/train/"
 
         val testDataFrame = DataFrame.readCSV(File("${Samples.modelFolder}/vgg16/Vgg16OnISIC2020_testDataFrame.csv"))
-        val testIterator = ISICDataSetIterator(testDataFrame, imageDir)
+        val testIterator = ISICDataSetIteratorFlipImpl(testDataFrame, imageDir)
         testIterator.preProcessor = VGG16ImagePreProcessor()
 
         val preTrainedModel = ModelSerializer.restoreComputationGraph("${Samples.modelFolder}/vgg16/Vgg16OnISIC2020.zip")

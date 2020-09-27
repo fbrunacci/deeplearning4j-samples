@@ -1,4 +1,4 @@
-package nyway.nd4j.samples.vgg16.isic2020.extramalignants
+package nyway.nd4j.samples.vgg16.isic2020.deotte
 
 import krangl.DataFrame
 import krangl.DataFrameRow
@@ -11,7 +11,7 @@ import org.nd4j.linalg.dataset.api.DataSetPreProcessor
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator
 import org.nd4j.linalg.factory.Nd4j
 
-class ISICDataSetIterator(private val dataFrame: DataFrame, private val imageDir: String, private val malignantDir: String) : DataSetIterator {
+class ISICDeotteDataSetIterator(private val dataFrame: DataFrame) : DataSetIterator {
 
     private val height = 224L
     private val width = 224L
@@ -36,15 +36,7 @@ class ISICDataSetIterator(private val dataFrame: DataFrame, private val imageDir
     }
 
     private fun rowToImage(nextRow: DataFrameRow): INDArray {
-        var asWritable = imageLoader.asWritable("$imageDir/${nextRow["image_name"]}.jpg")
-        val transformer = when( nextRow["flip"] ) {
-            "0" -> FlipImageTransform(0)
-            "-1" -> FlipImageTransform(-1)
-            "1" -> FlipImageTransform(1)
-            else -> null
-        }
-        transformer?.let { asWritable = transformer.transform(asWritable) }
-        return imageLoader.asMatrix(asWritable)
+        return imageLoader.asMatrix("${nextRow["jpegDir"]}/${nextRow["image_name"]}.jpg")
     }
 
     override fun hasNext(): Boolean {
@@ -79,21 +71,6 @@ class ISICDataSetIterator(private val dataFrame: DataFrame, private val imageDir
 
     override fun next(num: Int): DataSet {
         TODO("Not yet ok")
-        val featuresArray =  arrayOfNulls<INDArray>(num)
-        val labelsArray = arrayOfNulls<INDArray>(num)
-
-        for(i in 0..num-1) {
-            val nextRow = dataFrameIterator.next()
-            val features = imageLoader.asMatrix("$imageDir/${nextRow["image"]}.jpg")
-            val labels = rowToLabels(nextRow)
-            featuresArray[i] = features
-            labelsArray[i] = labels
-        }
-        val next = MultiDataSet(featuresArray, labelsArray) as DataSet
-        if( _preProcessor != null ) {
-            preProcessor.preProcess(next)
-        }
-        return next
     }
 
     override fun inputColumns(): Int {
