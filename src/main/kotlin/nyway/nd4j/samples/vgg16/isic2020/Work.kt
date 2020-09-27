@@ -5,6 +5,8 @@ import nyway.nd4j.samples.Samples
 import org.datavec.image.loader.NativeImageLoader
 import org.datavec.image.transform.FlipImageTransform
 import org.nd4j.linalg.api.ndarray.INDArray
+import java.io.File
+import javax.xml.crypto.Data
 
 object Work {
 
@@ -22,20 +24,19 @@ object Work {
 //        println(next.labels)
 //
 
-        val df : DataFrame = DataFrame.readCSV("/run/media/fabien/TOSHIBA/IA/ISIC/2020/train.csv").shuffle()
+        val df : DataFrame = DataFrame.readCSV("/home/fabien/.deeplearning4j/data/ISIC_2020/Deotte/512/train.csv").shuffle()
         println(df)
-
-
         val malignant = df.filter { it["benign_malignant"] eq "malignant" }
-        malignant.addColumn("flip"){0}
-
         val benign = df.filter { it["benign_malignant"] eq "benign" }
+        df.addColumn("folder"){"/home/fabien/.deeplearning4j/data/ISIC_2020/Deotte/512/train/"}
 
-        println("malignant: ${malignant.count()}")
-        println("benign: ${benign.count()}")
+
+        File("/home/arjun/tutorials/").walk().forEach {
+            println(it)
+        }
 
         val benignSized =  benign.shuffle().take(malignant.rows.count()*3)
-//        println(benignSized)
+        println(benignSized)
 
         val dfx = bindRows(
                 malignant.addColumn("flip"){""},
@@ -46,6 +47,9 @@ object Work {
         )
         println(dfx.select("image_name","flip"))
 
+        fun readCSVTo(fileOrUrl: String): DataFrame {
+            return null
+        }
 
     }
 

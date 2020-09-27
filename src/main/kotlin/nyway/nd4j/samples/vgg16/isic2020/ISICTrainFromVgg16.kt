@@ -15,10 +15,11 @@
  ******************************************************************************/
 package nyway.nd4j.samples.vgg16.isic2020
 
+import krangl.count
+import krangl.eq
 import krangl.writeCSV
 import nyway.nd4j.samples.Samples
-import nyway.nd4j.samples.listeners.PrintScoreIterationListener
-import org.deeplearning4j.core.storage.StatsStorage
+import nyway.nd4j.samples.vgg16.isic2020.flipped.ISICDataSet
 import org.deeplearning4j.nn.conf.distribution.NormalDistribution
 import org.deeplearning4j.nn.conf.layers.OutputLayer
 import org.deeplearning4j.nn.graph.ComputationGraph
@@ -27,9 +28,6 @@ import org.deeplearning4j.nn.transferlearning.TransferLearning
 import org.deeplearning4j.optimize.api.InvocationType
 import org.deeplearning4j.optimize.listeners.EvaluativeListener
 import org.deeplearning4j.optimize.listeners.ScoreIterationListener
-import org.deeplearning4j.ui.api.UIServer
-import org.deeplearning4j.ui.model.stats.StatsListener
-import org.deeplearning4j.ui.model.storage.InMemoryStatsStorage
 import org.deeplearning4j.zoo.ZooModel
 import org.deeplearning4j.zoo.model.VGG16
 import org.nd4j.evaluation.classification.Evaluation
@@ -111,13 +109,17 @@ object ISICTrainFromVgg16 {
 
         println("Number of image to train: ${isicDataSet.nTrain}")
         println("Number of image for test: ${isicDataSet.nTest}")
+        println("Train benign: ${isicDataSet.trainDataFrame.filter { it["benign_malignant"] eq "benign" }.count()}")
+        println("Train malignant: ${isicDataSet.trainDataFrame.filter { it["benign_malignant"] eq "malignant" }.count()}")
+        println("Test benign: ${isicDataSet.testDataFrame.filter { it["benign_malignant"] eq "benign" }.count()}")
+        println("Test malignant: ${isicDataSet.testDataFrame.filter { it["benign_malignant"] eq "malignant" }.count()}")
 
         //Print score every 10 iterations and evaluate on test set every epoch
         vgg16Transfer.setListeners(
                 ScoreIterationListener(100)
                 , EvaluativeListener(testIter, 1, InvocationType.EPOCH_END)
         )
-        for(epoch in 1..2) {
+        for(epoch in 1..5) {
             vgg16Transfer.fit(trainIter)
         }
 

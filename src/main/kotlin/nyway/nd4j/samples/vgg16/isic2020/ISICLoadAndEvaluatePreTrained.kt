@@ -3,6 +3,7 @@ package nyway.nd4j.samples.vgg16.isic2020
 import krangl.DataFrame
 import krangl.readCSV
 import nyway.nd4j.samples.Samples
+import nyway.nd4j.samples.vgg16.isic2020.flipped.ISICDataSetIterator
 import org.deeplearning4j.util.ModelSerializer
 import org.nd4j.evaluation.classification.Evaluation
 import org.nd4j.linalg.dataset.api.preprocessor.VGG16ImagePreProcessor

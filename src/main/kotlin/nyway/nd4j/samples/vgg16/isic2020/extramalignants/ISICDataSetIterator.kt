@@ -1,4 +1,4 @@
-package nyway.nd4j.samples.vgg16.isic2020
+package nyway.nd4j.samples.vgg16.isic2020.extramalignants
 
 import krangl.DataFrame
 import krangl.DataFrameRow
@@ -11,7 +11,7 @@ import org.nd4j.linalg.dataset.api.DataSetPreProcessor
 import org.nd4j.linalg.dataset.api.iterator.DataSetIterator
 import org.nd4j.linalg.factory.Nd4j
 
-class ISICDataSetIterator(private val dataFrame: DataFrame, private val imageDir: String) : DataSetIterator {
+class ISICDataSetIterator(private val dataFrame: DataFrame, private val imageDir: String, private val malignantDir: String) : DataSetIterator {
 
     private val height = 224L
     private val width = 224L
