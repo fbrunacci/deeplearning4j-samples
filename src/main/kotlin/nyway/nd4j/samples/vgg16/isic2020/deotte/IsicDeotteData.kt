@@ -1,6 +1,7 @@
 package nyway.nd4j.samples.vgg16.isic2020.deotte
 
 import krangl.*
+import java.io.File
 
 data class IsicDeotteData(val image_name: String,
                           val benign_malignant: String,
@@ -36,11 +37,14 @@ data class IsicDeotteData(val image_name: String,
                     dfMalignant2,
                     dfMalignant3
             )
-            return bindRows(
+            val allDataFrame = bindRows(
                     df2019.addColumn("from") { "2019" }.addColumn("jpegDir") { "$workDir/cdeotte-isic2019-v4-512x512/train" },
                     df2020.addColumn("from") { "2020" }.addColumn("jpegDir") { "$workDir/cdeotte-isic2020-v3-512x512/train" },
                     dfMalignant.addColumn("from") { "malignant" }.addColumn("jpegDir") { "$workDir/malignant-v2-512x512/jpeg512" }
-            ).shuffle()
+            )
+
+            val filteredOnImageExist = allDataFrame.filterByRow { File("${it["jpegDir"]}/${it["image_name"]}.jpg").exists() }
+            return filteredOnImageExist.shuffle()
         }
     }
 }
