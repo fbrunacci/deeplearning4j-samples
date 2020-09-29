@@ -1,6 +1,5 @@
 package nyway.nd4j.samples.objectdetection
 
-import nyway.nd4j.samples.vgg16.flower.EditLastLayerOthersFrozen
 import org.bytedeco.javacv.CanvasFrame
 import org.bytedeco.javacv.OpenCVFrameConverter.ToMat
 import org.bytedeco.opencv.global.opencv_imgproc
